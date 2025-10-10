@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Routes, Route, Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
 
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 // Simple localStorage helpers
 function loadFromStorage(key, fallback) {
   try {
@@ -85,20 +87,43 @@ function AuthLayout({ title, subtitle, children }) {
 }
 
 function ParentSignUp() {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, isTeacher: false })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Signup failed');
+      window.location.href = '/parent/signin';
+    } catch (err) {
+      setError(err.message || 'Signup failed');
+    }
+  }
+
   return (
     <AuthLayout title="Parent Sign Up" subtitle="Create your parent account to get started.">
-      <form className="form" onSubmit={(e) => { e.preventDefault(); window.location.href = '/parent/dashboard'; }}>
+      {error ? <div className="form-error">{error}</div> : null}
+      <form className="form" onSubmit={handleSubmit}>
         <div className="form-row">
           <label>Full Name</label>
-          <input type="text" placeholder="Jane Doe" />
+          <input type="text" placeholder="Jane Doe" value={username} onChange={(e) => setUsername(e.target.value)} />
         </div>
         <div className="form-row">
           <label>Email</label>
-          <input type="email" placeholder="jane@example.com" />
+          <input type="email" placeholder="jane@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="form-row">
           <label>Password</label>
-          <input type="password" placeholder="••••••••" />
+          <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <button type="submit" className="cta-btn primary" style={{ width: '100%' }}>Create Account</button>
         <p className="form-hint">Already have an account? <Link to="/parent/signin">Sign in</Link></p>
@@ -108,16 +133,38 @@ function ParentSignUp() {
 }
 
 function ParentSignIn() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Login failed');
+      window.location.href = data?.isTeacher ? '/teacher/dashboard' : '/parent/dashboard';
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    }
+  }
+
   return (
     <AuthLayout title="Parent Sign In" subtitle="Welcome back! Sign in to continue.">
-      <form className="form" onSubmit={(e) => { e.preventDefault(); window.location.href = '/parent/dashboard'; }}>
+      {error ? <div className="form-error">{error}</div> : null}
+      <form className="form" onSubmit={handleSubmit}>
         <div className="form-row">
           <label>Email</label>
-          <input type="email" placeholder="jane@example.com" />
+          <input type="email" placeholder="jane@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="form-row">
           <label>Password</label>
-          <input type="password" placeholder="••••••••" />
+          <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <button type="submit" className="cta-btn primary" style={{ width: '100%' }}>Sign In</button>
         <p className="form-hint">New here? <Link to="/parent/signup">Create an account</Link></p>
@@ -127,20 +174,43 @@ function ParentSignIn() {
 }
 
 function TeacherSignUp() {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, isTeacher: true })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Signup failed');
+      window.location.href = '/teacher/signin';
+    } catch (err) {
+      setError(err.message || 'Signup failed');
+    }
+  }
+
   return (
     <AuthLayout title="Teacher Sign Up" subtitle="Join to connect with parents and manage your class.">
-      <form className="form" onSubmit={(e) => { e.preventDefault(); window.location.href = '/teacher/dashboard'; }}>
+      {error ? <div className="form-error">{error}</div> : null}
+      <form className="form" onSubmit={handleSubmit}>
         <div className="form-row">
           <label>Full Name</label>
-          <input type="text" placeholder="Mr. John Smith" />
+          <input type="text" placeholder="Mr. John Smith" value={username} onChange={(e) => setUsername(e.target.value)} />
         </div>
         <div className="form-row">
           <label>Email</label>
-          <input type="email" placeholder="john@example.com" />
+          <input type="email" placeholder="john@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="form-row">
           <label>Password</label>
-          <input type="password" placeholder="••••••••" />
+          <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <button type="submit" className="cta-btn primary" style={{ width: '100%' }}>Create Account</button>
         <p className="form-hint">Already have an account? <Link to="/teacher/signin">Sign in</Link></p>
@@ -150,16 +220,38 @@ function TeacherSignUp() {
 }
 
 function TeacherSignIn() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    try {
+      const res = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Login failed');
+      window.location.href = data?.isTeacher ? '/teacher/dashboard' : '/parent/dashboard';
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    }
+  }
+
   return (
     <AuthLayout title="Teacher Sign In" subtitle="Welcome back! Sign in to continue.">
-      <form className="form" onSubmit={(e) => { e.preventDefault(); window.location.href = '/teacher/dashboard'; }}>
+      {error ? <div className="form-error">{error}</div> : null}
+      <form className="form" onSubmit={handleSubmit}>
         <div className="form-row">
           <label>Email</label>
-          <input type="email" placeholder="john@example.com" />
+          <input type="email" placeholder="john@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="form-row">
           <label>Password</label>
-          <input type="password" placeholder="••••••••" />
+          <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <button type="submit" className="cta-btn primary" style={{ width: '100%' }}>Sign In</button>
         <p className="form-hint">New here? <Link to="/teacher/signup">Create an account</Link></p>
