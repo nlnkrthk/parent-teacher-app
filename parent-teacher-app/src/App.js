@@ -159,6 +159,7 @@ function App() {
         <Route path="/parent/dashboard" element={<ParentDashboard />} />
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
         <Route path="/teacher/dashboard/students" element={<TeacherStudents />} />
+        <Route path="/teacher/dashboard/classes" element={<TeacherClasses />} />
         <Route path="/parent/signup" element={<ParentSignUp />} />
         <Route path="/parent/signin" element={<ParentSignIn />} />
         <Route path="/teacher/signup" element={<TeacherSignUp />} />
@@ -210,6 +211,7 @@ function TeacherDashboard() {
   const links = [
     { to: '/teacher/dashboard', label: 'Overview' },
     { to: '/teacher/dashboard/students', label: 'Students' },
+    { to: '/teacher/dashboard/classes', label: 'Classes' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
     { to: '/teacher/dashboard/settings', label: 'Settings' }
   ];
@@ -225,16 +227,22 @@ function TeacherStudents() {
   const links = [
     { to: '/teacher/dashboard', label: 'Overview' },
     { to: '/teacher/dashboard/students', label: 'Students' },
+    { to: '/teacher/dashboard/classes', label: 'Classes' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
     { to: '/teacher/dashboard/settings', label: 'Settings' }
   ];
   const [students, setStudents] = useState([
-    { id: '1', name: 'Ava Johnson', rollNumber: 'PT-001', email: 'ava.johnson@example.com', className: 'Grade 4' },
-    { id: '2', name: 'Leo Patel', rollNumber: 'PT-002', email: 'leo.patel@example.com', className: 'Grade 4' },
-    { id: '3', name: 'Mia Chen', rollNumber: 'PT-003', email: 'mia.chen@example.com', className: 'Grade 5' }
+    { id: '1', name: 'Ava Johnson', rollNumber: 'PT-001', email: 'ava.johnson@example.com', className: 'Grade 4', details: { attendancePercent: '', examMarks: '', assignmentsSubmitted: '' } },
+    { id: '2', name: 'Leo Patel', rollNumber: 'PT-002', email: 'leo.patel@example.com', className: 'Grade 4', details: { attendancePercent: '', examMarks: '', assignmentsSubmitted: '' } },
+    { id: '3', name: 'Mia Chen', rollNumber: 'PT-003', email: 'mia.chen@example.com', className: 'Grade 5', details: { attendancePercent: '', examMarks: '', assignmentsSubmitted: '' } }
   ]);
   const [form, setForm] = useState({ name: '', rollNumber: '', email: '', className: '' });
   const [error, setError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [detailForm, setDetailForm] = useState({ attendancePercent: '', examMarks: '', assignmentsSubmitted: '' });
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -255,13 +263,30 @@ function TeacherStudents() {
     const id = String(Date.now());
     setStudents((list) => [
       ...list,
-      { id, name: form.name, rollNumber: form.rollNumber, email: form.email, className: form.className || '—' }
+      { id, name: form.name, rollNumber: form.rollNumber, email: form.email, className: form.className || '—', details: { attendancePercent: '', examMarks: '', assignmentsSubmitted: '' } }
     ]);
     setForm({ name: '', rollNumber: '', email: '', className: '' });
+    setIsModalOpen(false);
   }
 
   function handleDelete(id) {
     setStudents((list) => list.filter((s) => s.id !== id));
+  }
+
+  function openDetails(student) {
+    setSelectedStudentId(student.id);
+    const d = student.details || { attendancePercent: '', examMarks: '', assignmentsSubmitted: '' };
+    setDetailForm({ attendancePercent: d.attendancePercent || '', examMarks: d.examMarks || '', assignmentsSubmitted: d.assignmentsSubmitted || '' });
+    setIsDetailOpen(true);
+  }
+
+  function saveDetails(e) {
+    e.preventDefault();
+    setStudents((list) => list.map((s) => {
+      if (s.id !== selectedStudentId) return s;
+      return { ...s, details: { attendancePercent: detailForm.attendancePercent, examMarks: detailForm.examMarks, assignmentsSubmitted: detailForm.assignmentsSubmitted } };
+    }));
+    setIsDetailOpen(false);
   }
 
   return (
@@ -269,30 +294,9 @@ function TeacherStudents() {
       <h1>Students</h1>
       <p>Manage your roster. Add students and view key details.</p>
 
-      <form className="form add-student" onSubmit={handleAdd} style={{ maxWidth: '720px' }}>
-        {error ? <div className="form-error">{error}</div> : null}
-        <div className="form-grid">
-          <div className="form-row">
-            <label>Name</label>
-            <input name="name" value={form.name} onChange={handleChange} placeholder="e.g., John Doe" />
-          </div>
-          <div className="form-row">
-            <label>Roll Number</label>
-            <input name="rollNumber" value={form.rollNumber} onChange={handleChange} placeholder="e.g., PT-010" />
-          </div>
-          <div className="form-row">
-            <label>Email</label>
-            <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="john@example.com" />
-          </div>
-          <div className="form-row">
-            <label>Class</label>
-            <input name="className" value={form.className} onChange={handleChange} placeholder="e.g., Grade 5" />
-          </div>
-        </div>
-        <div>
-          <button type="submit" className="cta-btn primary">Add Student</button>
-        </div>
-      </form>
+      <div>
+        <button className="cta-btn primary" onClick={() => setIsModalOpen(true)}>Add Student</button>
+      </div>
 
       <div className="table-wrap">
         <table className="table">
@@ -302,7 +306,7 @@ function TeacherStudents() {
               <th>Roll No</th>
               <th>Email</th>
               <th>Class</th>
-              <th style={{ width: '100px' }}>Actions</th>
+              <th style={{ width: '160px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -313,6 +317,7 @@ function TeacherStudents() {
                 <td>{s.email}</td>
                 <td>{s.className}</td>
                 <td>
+                  <button className="table-btn" onClick={() => openDetails(s)} style={{ marginRight: 8 }}>Details</button>
                   <button className="table-btn" onClick={() => handleDelete(s.id)}>Remove</button>
                 </td>
               </tr>
@@ -325,6 +330,249 @@ function TeacherStudents() {
           </tbody>
         </table>
       </div>
+
+      {isModalOpen ? (
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Add Student</h3>
+              <button className="modal-close" onClick={() => setIsModalOpen(false)}>Close</button>
+            </div>
+            {error ? <div className="form-error">{error}</div> : null}
+            <form className="form" onSubmit={handleAdd}>
+              <div className="form-grid">
+                <div className="form-row">
+                  <label>Name</label>
+                  <input name="name" value={form.name} onChange={handleChange} placeholder="e.g., John Doe" />
+                </div>
+                <div className="form-row">
+                  <label>Roll Number</label>
+                  <input name="rollNumber" value={form.rollNumber} onChange={handleChange} placeholder="e.g., PT-010" />
+                </div>
+                <div className="form-row">
+                  <label>Email</label>
+                  <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="john@example.com" />
+                </div>
+                <div className="form-row">
+                  <label>Class</label>
+                  <input name="className" value={form.className} onChange={handleChange} placeholder="e.g., Grade 5" />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="table-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                <button type="submit" className="cta-btn primary">Add Student</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {isDetailOpen ? (
+        <div className="modal-overlay" onClick={() => setIsDetailOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Student Details</h3>
+              <button className="modal-close" onClick={() => setIsDetailOpen(false)}>Close</button>
+            </div>
+            <form className="form" onSubmit={saveDetails}>
+              <div className="form-grid">
+                <div className="form-row">
+                  <label>Attendance (%)</label>
+                  <input name="attendancePercent" type="number" min="0" max="100" value={detailForm.attendancePercent} onChange={(e) => setDetailForm({ ...detailForm, attendancePercent: e.target.value })} placeholder="e.g., 92" />
+                </div>
+                <div className="form-row">
+                  <label>Exam Marks</label>
+                  <input name="examMarks" value={detailForm.examMarks} onChange={(e) => setDetailForm({ ...detailForm, examMarks: e.target.value })} placeholder="e.g., Math:95, Eng:88" />
+                </div>
+                <div className="form-row">
+                  <label>Assignments Submitted</label>
+                  <input name="assignmentsSubmitted" type="number" min="0" value={detailForm.assignmentsSubmitted} onChange={(e) => setDetailForm({ ...detailForm, assignmentsSubmitted: e.target.value })} placeholder="e.g., 8" />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="table-btn" onClick={() => setIsDetailOpen(false)}>Cancel</button>
+                <button type="submit" className="cta-btn primary">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </SidebarLayout>
+  );
+}
+
+function TeacherClasses() {
+  const links = [
+    { to: '/teacher/dashboard', label: 'Overview' },
+    { to: '/teacher/dashboard/students', label: 'Students' },
+    { to: '/teacher/dashboard/classes', label: 'Classes' },
+    { to: '/teacher/dashboard/messages', label: 'Messages' },
+    { to: '/teacher/dashboard/settings', label: 'Settings' }
+  ];
+
+  const [classes, setClasses] = useState([
+    { id: 'c4', name: 'Grade 4' },
+    { id: 'c5', name: 'Grade 5' },
+    { id: 'c6', name: 'Grade 6' }
+  ]);
+  const [students, setStudents] = useState([
+    { id: '1', name: 'Ava Johnson', rollNumber: 'PT-001', email: 'ava.johnson@example.com', className: 'Grade 4' },
+    { id: '2', name: 'Leo Patel', rollNumber: 'PT-002', email: 'leo.patel@example.com', className: 'Grade 4' },
+    { id: '3', name: 'Mia Chen', rollNumber: 'PT-003', email: 'mia.chen@example.com', className: 'Grade 5' }
+  ]);
+  const [selectedClass, setSelectedClass] = useState('Grade 4');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [form, setForm] = useState({ name: '', rollNumber: '', email: '' });
+  const [error, setError] = useState('');
+
+  const [isCreateClassOpen, setIsCreateClassOpen] = useState(false);
+  const [newClassName, setNewClassName] = useState('');
+  const [classError, setClassError] = useState('');
+
+  const classStudents = students.filter((s) => s.className === selectedClass);
+
+  function handleAddStudent(e) {
+    e.preventDefault();
+    setError('');
+    if (!form.name || !form.rollNumber || !form.email) {
+      setError('Please fill name, roll number, and email.');
+      return;
+    }
+    if (students.some((s) => s.rollNumber.toLowerCase() === form.rollNumber.toLowerCase())) {
+      setError('Roll number already exists.');
+      return;
+    }
+    const id = String(Date.now());
+    setStudents((list) => [
+      ...list,
+      { id, name: form.name, rollNumber: form.rollNumber, email: form.email, className: selectedClass }
+    ]);
+    setForm({ name: '', rollNumber: '', email: '' });
+    setIsModalOpen(false);
+  }
+
+  function handleCreateClass(e) {
+    e.preventDefault();
+    setClassError('');
+    const trimmed = newClassName.trim();
+    if (!trimmed) {
+      setClassError('Please enter a class name.');
+      return;
+    }
+    if (classes.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+      setClassError('Class already exists.');
+      return;
+    }
+    const id = 'c-' + Date.now();
+    const cls = { id, name: trimmed };
+    setClasses((list) => [...list, cls]);
+    setSelectedClass(cls.name);
+    setNewClassName('');
+    setIsCreateClassOpen(false);
+  }
+
+  return (
+    <SidebarLayout title="Teacher Dashboard" links={links}>
+      <h1>Classes</h1>
+      <p>Create a class, then add students directly to it.</p>
+
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button className="cta-btn" onClick={() => setIsCreateClassOpen(true)}>Create Class</button>
+        <button className="cta-btn primary" onClick={() => setIsModalOpen(true)}>Add Student to {selectedClass}</button>
+      </div>
+
+      <div className="classes-grid">
+        {classes.map((c) => (
+          <button
+            key={c.id}
+            className={`class-card${selectedClass === c.name ? ' active' : ''}`}
+            onClick={() => setSelectedClass(c.name)}
+          >
+            <div className="class-name">{c.name}</div>
+            <div className="class-count">{students.filter((s) => s.className === c.name).length} students</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="table-wrap" style={{ marginTop: 16 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Roll No</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            {classStudents.map((s) => (
+              <tr key={s.id}>
+                <td>{s.name}</td>
+                <td>{s.rollNumber}</td>
+                <td>{s.email}</td>
+              </tr>
+            ))}
+            {classStudents.length === 0 ? (
+              <tr>
+                <td colSpan={3} style={{ textAlign: 'center', color: '#94a3b8' }}>No students in this class yet.</td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+
+      {isModalOpen ? (
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Add Student to {selectedClass}</h3>
+              <button className="modal-close" onClick={() => setIsModalOpen(false)}>Close</button>
+            </div>
+            {error ? <div className="form-error">{error}</div> : null}
+            <form className="form" onSubmit={handleAddStudent}>
+              <div className="form-grid">
+                <div className="form-row">
+                  <label>Name</label>
+                  <input name="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g., John Doe" />
+                </div>
+                <div className="form-row">
+                  <label>Roll Number</label>
+                  <input name="rollNumber" value={form.rollNumber} onChange={(e) => setForm({ ...form, rollNumber: e.target.value })} placeholder="e.g., PT-010" />
+                </div>
+                <div className="form-row">
+                  <label>Email</label>
+                  <input name="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="john@example.com" />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="table-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                <button type="submit" className="cta-btn primary">Add Student</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {isCreateClassOpen ? (
+        <div className="modal-overlay" onClick={() => setIsCreateClassOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Create Class</h3>
+              <button className="modal-close" onClick={() => setIsCreateClassOpen(false)}>Close</button>
+            </div>
+            {classError ? <div className="form-error">{classError}</div> : null}
+            <form className="form" onSubmit={handleCreateClass}>
+              <div className="form-row">
+                <label>Class Name</label>
+                <input value={newClassName} onChange={(e) => setNewClassName(e.target.value)} placeholder="e.g., Grade 7" />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="table-btn" onClick={() => setIsCreateClassOpen(false)}>Cancel</button>
+                <button type="submit" className="cta-btn primary">Create</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </SidebarLayout>
   );
 }
