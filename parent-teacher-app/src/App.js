@@ -178,6 +178,7 @@ function App() {
         <Route path="/teacher/dashboard/students" element={<TeacherStudents />} />
         <Route path="/teacher/dashboard/classes" element={<TeacherClasses />} />
         <Route path="/teacher/dashboard/announcements" element={<TeacherAnnouncements />} />
+        <Route path="/teacher/dashboard/messages" element={<TeacherMessages />} />
         <Route path="/parent/signup" element={<ParentSignUp />} />
         <Route path="/parent/signin" element={<ParentSignIn />} />
         <Route path="/teacher/signup" element={<TeacherSignUp />} />
@@ -712,6 +713,113 @@ function TeacherAnnouncements() {
               </div>
             </form>
           </div>
+        </div>
+      ) : null}
+    </SidebarLayout>
+  );
+}
+
+function TeacherMessages() {
+  const links = [
+    { to: '/teacher/dashboard', label: 'Dashboard' },
+    { to: '/teacher/dashboard/students', label: 'Students' },
+    { to: '/teacher/dashboard/classes', label: 'Classes' },
+    { to: '/teacher/dashboard/announcements', label: 'Announcements' },
+    { to: '/teacher/dashboard/messages', label: 'Messages' },
+    { to: '/teacher/dashboard/settings', label: 'Settings' }
+  ];
+
+  const classes = loadFromStorage('classes', []);
+  const [selectedClass, setSelectedClass] = useState(classes[0]?.name || '');
+
+  // In a real app, students would be global or fetched by class
+  const [students] = useState([
+    { id: '1', name: 'Ava Johnson', className: 'Grade 4' },
+    { id: '2', name: 'Leo Patel', className: 'Grade 4' },
+    { id: '3', name: 'Mia Chen', className: 'Grade 5' }
+  ]);
+
+  const [chatWith, setChatWith] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [draft, setDraft] = useState('');
+
+  const filtered = students.filter((s) => s.className === selectedClass);
+
+  function sendMessage(e) {
+    e.preventDefault();
+    if (!draft.trim()) return;
+    const msg = { id: Date.now(), from: 'me', text: draft.trim(), at: Date.now(), toStudentId: chatWith?.id };
+    setMessages((m) => [...m, msg]);
+    setDraft('');
+    // Simulate reply
+    setTimeout(() => {
+      setMessages((m) => [...m, { id: Date.now() + 1, from: 'them', text: 'Thanks for the update!', at: Date.now(), toStudentId: chatWith?.id }]);
+    }, 800);
+  }
+
+  const thread = chatWith ? messages.filter((m) => m.toStudentId === chatWith.id) : [];
+
+  return (
+    <SidebarLayout title="Teacher Dashboard" links={links}>
+      <h1>Messages</h1>
+      <p>Select a class, then message a student from that class.</p>
+
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <label style={{ color: '#cbd5e1' }}>Class</label>
+        <select
+          value={selectedClass}
+          onChange={(e) => { setSelectedClass(e.target.value); setChatWith(null); }}
+          style={{ background: '#0b0d12', color: '#e5e7eb', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 10px' }}
+        >
+          {classes.length === 0 ? <option value="">No classes available</option> : null}
+          {classes.map((c) => (
+            <option key={c.id} value={c.name}>{c.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="table-wrap" style={{ marginTop: 16 }}>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((s) => (
+              <tr key={s.id}>
+                <td>{s.name}</td>
+                <td>
+                  <button className="table-btn" onClick={() => setChatWith(s)}>Chat</button>
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={2} style={{ textAlign: 'center', color: '#94a3b8' }}>No students for this class.</td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+
+      {chatWith ? (
+        <div className="chat-panel">
+          <div className="chat-header">
+            <div className="chat-title">Chat with {chatWith.name}</div>
+            <button className="chat-close" onClick={() => setChatWith(null)}>Close</button>
+          </div>
+          <div className="chat-body">
+            {thread.map((m) => (
+              <div key={m.id} className={`chat-msg ${m.from === 'me' ? 'me' : 'them'}`}>{m.text}</div>
+            ))}
+            {thread.length === 0 ? <div className="announcement-empty">No messages yet. Say hello!</div> : null}
+          </div>
+          <form className="chat-input" onSubmit={sendMessage}>
+            <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Type a message..." />
+            <button className="cta-btn primary" type="submit">Send</button>
+          </form>
         </div>
       ) : null}
     </SidebarLayout>
