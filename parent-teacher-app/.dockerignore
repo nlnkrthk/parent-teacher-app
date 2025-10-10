@@ -1,0 +1,32 @@
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Ignore build artifacts (unless you're using multi-stage builds)
+build
+dist
+
+# Ignore local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore OS or editor-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore git files
+.git
+.gitignore
+
+# Ignore Docker-related files (not needed inside image)
+Dockerfile
+.dockerignore
+
+# Ignore test and coverage output
+coverage
+__tests__
+__mocks__
