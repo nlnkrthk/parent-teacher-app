@@ -402,3 +402,52 @@
   color: #94a3b8;
   font-size: 12px;
 }
+
+/* Announcements */
+.announcements-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.announcement-card {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 14px;
+  background: #0b0d12;
+}
+
+.announcement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.announcement-title {
+  color: #e5e7eb;
+  font-weight: 700;
+}
+
+.announcement-meta {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.announcement-desc {
+  margin-top: 6px;
+  color: #cbd5e1;
+}
+
+.announcement-extra {
+  margin-top: 6px;
+  color: #a78bfa;
+}
+
+.announcement-empty {
+  color: #94a3b8;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px;
+}

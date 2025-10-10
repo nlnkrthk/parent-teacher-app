@@ -1,6 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Routes, Route, Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
+
+// Simple localStorage helpers
+function loadFromStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+function saveToStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    // ignore
+  }
+}
 
 function Home() {
   const navigate = useNavigate();
@@ -160,6 +177,7 @@ function App() {
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
         <Route path="/teacher/dashboard/students" element={<TeacherStudents />} />
         <Route path="/teacher/dashboard/classes" element={<TeacherClasses />} />
+        <Route path="/teacher/dashboard/announcements" element={<TeacherAnnouncements />} />
         <Route path="/parent/signup" element={<ParentSignUp />} />
         <Route path="/parent/signin" element={<ParentSignIn />} />
         <Route path="/teacher/signup" element={<TeacherSignUp />} />
@@ -194,14 +212,14 @@ function SidebarLayout({ title, links, children }) {
 
 function ParentDashboard() {
   const links = [
-    { to: '/parent/dashboard', label: 'Overview' },
+    { to: '/parent/dashboard', label: 'Dashboard' },
     { to: '/parent/dashboard/messages', label: 'Messages' },
     { to: '/parent/dashboard/assignments', label: 'Assignments' },
     { to: '/parent/dashboard/settings', label: 'Settings' }
   ];
   return (
     <SidebarLayout title="Parent Dashboard" links={links}>
-      <h1>Overview</h1>
+      <h1>Dashboard</h1>
       <p>Welcome! Here you’ll see announcements, upcoming events, and your child’s progress.</p>
     </SidebarLayout>
   );
@@ -209,25 +227,48 @@ function ParentDashboard() {
 
 function TeacherDashboard() {
   const links = [
-    { to: '/teacher/dashboard', label: 'Overview' },
+    { to: '/teacher/dashboard', label: 'Dashboard' },
     { to: '/teacher/dashboard/students', label: 'Students' },
     { to: '/teacher/dashboard/classes', label: 'Classes' },
+    { to: '/teacher/dashboard/announcements', label: 'Announcements' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
     { to: '/teacher/dashboard/settings', label: 'Settings' }
   ];
+  const [announcements, setAnnouncements] = useState([]);
+  useEffect(() => {
+    const stored = loadFromStorage('announcements', []);
+    setAnnouncements(stored);
+  }, []);
+
   return (
     <SidebarLayout title="Teacher Dashboard" links={links}>
-      <h1>Overview</h1>
-      <p>Welcome! Manage your students, share announcements, and coordinate with parents.</p>
+      <h1>Dashboard</h1>
+      <p>Welcome! Manage your students, classes, share announcements, and coordinate with parents.</p>
+
+      <div className="announcements-list">
+        {announcements.length === 0 ? (
+          <div className="announcement-empty">No announcements yet. Create one from the Announcements tab.</div>
+        ) : announcements.map((a) => (
+          <div key={a.id} className="announcement-card">
+            <div className="announcement-header">
+              <div className="announcement-title">{a.title}</div>
+              <div className="announcement-meta">{a.className} • {new Date(a.createdAt).toLocaleString()}</div>
+            </div>
+            <div className="announcement-desc">{a.description}</div>
+            {a.extra ? <div className="announcement-extra">{a.extra}</div> : null}
+          </div>
+        ))}
+      </div>
     </SidebarLayout>
   );
 }
 
 function TeacherStudents() {
   const links = [
-    { to: '/teacher/dashboard', label: 'Overview' },
+    { to: '/teacher/dashboard', label: 'Dashboard' },
     { to: '/teacher/dashboard/students', label: 'Students' },
     { to: '/teacher/dashboard/classes', label: 'Classes' },
+    { to: '/teacher/dashboard/announcements', label: 'Announcements' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
     { to: '/teacher/dashboard/settings', label: 'Settings' }
   ];
@@ -403,24 +444,25 @@ function TeacherStudents() {
 
 function TeacherClasses() {
   const links = [
-    { to: '/teacher/dashboard', label: 'Overview' },
+    { to: '/teacher/dashboard', label: 'Dashboard' },
     { to: '/teacher/dashboard/students', label: 'Students' },
     { to: '/teacher/dashboard/classes', label: 'Classes' },
+    { to: '/teacher/dashboard/announcements', label: 'Announcements' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
     { to: '/teacher/dashboard/settings', label: 'Settings' }
   ];
 
-  const [classes, setClasses] = useState([
+  const [classes, setClasses] = useState(() => loadFromStorage('classes', [
     { id: 'c4', name: 'Grade 4' },
     { id: 'c5', name: 'Grade 5' },
     { id: 'c6', name: 'Grade 6' }
-  ]);
+  ]));
   const [students, setStudents] = useState([
     { id: '1', name: 'Ava Johnson', rollNumber: 'PT-001', email: 'ava.johnson@example.com', className: 'Grade 4' },
     { id: '2', name: 'Leo Patel', rollNumber: 'PT-002', email: 'leo.patel@example.com', className: 'Grade 4' },
     { id: '3', name: 'Mia Chen', rollNumber: 'PT-003', email: 'mia.chen@example.com', className: 'Grade 5' }
   ]);
-  const [selectedClass, setSelectedClass] = useState('Grade 4');
+  const [selectedClass, setSelectedClass] = useState(classes[0]?.name || '');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({ name: '', rollNumber: '', email: '' });
   const [error, setError] = useState('');
@@ -428,6 +470,10 @@ function TeacherClasses() {
   const [isCreateClassOpen, setIsCreateClassOpen] = useState(false);
   const [newClassName, setNewClassName] = useState('');
   const [classError, setClassError] = useState('');
+
+  useEffect(() => {
+    saveToStorage('classes', classes);
+  }, [classes]);
 
   const classStudents = students.filter((s) => s.className === selectedClass);
 
@@ -478,7 +524,7 @@ function TeacherClasses() {
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <button className="cta-btn" onClick={() => setIsCreateClassOpen(true)}>Create Class</button>
-        <button className="cta-btn primary" onClick={() => setIsModalOpen(true)}>Add Student to {selectedClass}</button>
+        <button className="cta-btn primary" onClick={() => setIsModalOpen(true)} disabled={!selectedClass}>Add Student to {selectedClass || '—'}</button>
       </div>
 
       <div className="classes-grid">
@@ -568,6 +614,101 @@ function TeacherClasses() {
               <div className="modal-actions">
                 <button type="button" className="table-btn" onClick={() => setIsCreateClassOpen(false)}>Cancel</button>
                 <button type="submit" className="cta-btn primary">Create</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </SidebarLayout>
+  );
+}
+
+function TeacherAnnouncements() {
+  const links = [
+    { to: '/teacher/dashboard', label: 'Dashboard' },
+    { to: '/teacher/dashboard/students', label: 'Students' },
+    { to: '/teacher/dashboard/classes', label: 'Classes' },
+    { to: '/teacher/dashboard/announcements', label: 'Announcements' },
+    { to: '/teacher/dashboard/messages', label: 'Messages' },
+    { to: '/teacher/dashboard/settings', label: 'Settings' }
+  ];
+
+  const [classes] = useState(() => loadFromStorage('classes', []));
+  const [selectedClass, setSelectedClass] = useState(classes[0]?.name || '');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [error, setError] = useState('');
+  const [form, setForm] = useState({ title: '', description: '', extra: '' });
+
+  function createAnnouncement(e) {
+    e.preventDefault();
+    setError('');
+    if (!selectedClass) {
+      setError('Please select a class.');
+      return;
+    }
+    if (!form.title || !form.description) {
+      setError('Please provide a title and description.');
+      return;
+    }
+    const announcement = {
+      id: 'a-' + Date.now(),
+      className: selectedClass,
+      title: form.title,
+      description: form.description,
+      extra: form.extra,
+      createdAt: Date.now()
+    };
+    const existing = loadFromStorage('announcements', []);
+    const updated = [announcement, ...existing];
+    saveToStorage('announcements', updated);
+    setForm({ title: '', description: '', extra: '' });
+    setIsModalOpen(false);
+  }
+
+  return (
+    <SidebarLayout title="Teacher Dashboard" links={links}>
+      <h1>Announcements</h1>
+      <p>Create announcements for a specific class. These will appear on the Dashboard.</p>
+
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <label style={{ color: '#cbd5e1' }}>Class</label>
+        <select
+          value={selectedClass}
+          onChange={(e) => setSelectedClass(e.target.value)}
+          style={{ background: '#0b0d12', color: '#e5e7eb', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 10px' }}
+        >
+          {classes.length === 0 ? <option value="">No classes available</option> : null}
+          {classes.map((c) => (
+            <option key={c.id} value={c.name}>{c.name}</option>
+          ))}
+        </select>
+        <button className="cta-btn primary" onClick={() => setIsModalOpen(true)} disabled={!selectedClass}>Add Announcement</button>
+      </div>
+
+      {isModalOpen ? (
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">New Announcement</h3>
+              <button className="modal-close" onClick={() => setIsModalOpen(false)}>Close</button>
+            </div>
+            {error ? <div className="form-error">{error}</div> : null}
+            <form className="form" onSubmit={createAnnouncement}>
+              <div className="form-row">
+                <label>Title</label>
+                <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g., Field Trip Reminder" />
+              </div>
+              <div className="form-row">
+                <label>Description</label>
+                <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Key details for the class" />
+              </div>
+              <div className="form-row">
+                <label>Extra Info (optional)</label>
+                <input value={form.extra} onChange={(e) => setForm({ ...form, extra: e.target.value })} placeholder="Links, attachments, etc." />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="table-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                <button type="submit" className="cta-btn primary">Post</button>
               </div>
             </form>
           </div>
