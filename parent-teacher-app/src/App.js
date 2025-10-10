@@ -266,11 +266,16 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/parent/dashboard" element={<ParentDashboard />} />
+        <Route path="/parent/dashboard/messages" element={<ParentMessages />} />
+        <Route path="/parent/dashboard/assignments" element={<ParentAssignments />} />
+        <Route path="/parent/dashboard/profile" element={<ParentProfile />} />
+        <Route path="/parent/dashboard/report" element={<ParentReport />} />
         <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
         <Route path="/teacher/dashboard/students" element={<TeacherStudents />} />
         <Route path="/teacher/dashboard/classes" element={<TeacherClasses />} />
         <Route path="/teacher/dashboard/announcements" element={<TeacherAnnouncements />} />
         <Route path="/teacher/dashboard/messages" element={<TeacherMessages />} />
+        <Route path="/teacher/dashboard/report" element={<TeacherReport />} />
         <Route path="/parent/signup" element={<ParentSignUp />} />
         <Route path="/parent/signin" element={<ParentSignIn />} />
         <Route path="/teacher/signup" element={<TeacherSignUp />} />
@@ -308,12 +313,73 @@ function ParentDashboard() {
     { to: '/parent/dashboard', label: 'Dashboard' },
     { to: '/parent/dashboard/messages', label: 'Messages' },
     { to: '/parent/dashboard/assignments', label: 'Assignments' },
-    { to: '/parent/dashboard/settings', label: 'Settings' }
+    { to: '/parent/dashboard/profile', label: 'Profile' },
+    { to: '/parent/dashboard/report', label: 'Report' }
   ];
+  
+  const [announcements, setAnnouncements] = useState([]);
+  const [messages, setMessages] = useState([]);
+  
+  useEffect(() => {
+    const storedAnnouncements = loadFromStorage('announcements', []);
+    const storedMessages = loadFromStorage('messages', []);
+    setAnnouncements(storedAnnouncements);
+    setMessages(storedMessages);
+  }, []);
+
   return (
     <SidebarLayout title="Parent Dashboard" links={links}>
       <h1>Dashboard</h1>
-      <p>Welcome! Here you’ll see announcements, upcoming events, and your child’s progress.</p>
+      <p>Welcome! Here you'll see announcements, upcoming events, and your child's progress.</p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
+        {/* Announcements Section */}
+        <div>
+          <h2 style={{ color: '#e5e7eb', marginBottom: '16px' }}>Recent Announcements</h2>
+          <div className="announcements-list">
+            {announcements.length === 0 ? (
+              <div className="announcement-empty">No announcements from teachers yet.</div>
+            ) : announcements.slice(0, 3).map((a) => (
+              <div key={a.id} className="announcement-card">
+                <div className="announcement-header">
+                  <div className="announcement-title">{a.title}</div>
+                  <div className="announcement-meta">{a.className} • {new Date(a.createdAt).toLocaleString()}</div>
+                </div>
+                <div className="announcement-desc">{a.description}</div>
+                {a.extra ? <div className="announcement-extra">{a.extra}</div> : null}
+              </div>
+            ))}
+          </div>
+          {announcements.length > 3 && (
+            <Link to="/parent/dashboard/announcements" className="cta-btn" style={{ marginTop: '12px', display: 'inline-block' }}>
+              View All Announcements
+            </Link>
+          )}
+        </div>
+
+        {/* Messages Section */}
+        <div>
+          <h2 style={{ color: '#e5e7eb', marginBottom: '16px' }}>Recent Messages</h2>
+          <div className="announcements-list">
+            {messages.length === 0 ? (
+              <div className="announcement-empty">No messages from teachers yet.</div>
+            ) : messages.slice(0, 3).map((m) => (
+              <div key={m.id} className="announcement-card">
+                <div className="announcement-header">
+                  <div className="announcement-title">Message from Teacher</div>
+                  <div className="announcement-meta">{new Date(m.createdAt).toLocaleString()}</div>
+                </div>
+                <div className="announcement-desc">{m.text}</div>
+              </div>
+            ))}
+          </div>
+          {messages.length > 3 && (
+            <Link to="/parent/dashboard/messages" className="cta-btn" style={{ marginTop: '12px', display: 'inline-block' }}>
+              View All Messages
+            </Link>
+          )}
+        </div>
+      </div>
     </SidebarLayout>
   );
 }
@@ -325,12 +391,16 @@ function TeacherDashboard() {
     { to: '/teacher/dashboard/classes', label: 'Classes' },
     { to: '/teacher/dashboard/announcements', label: 'Announcements' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
-    { to: '/teacher/dashboard/settings', label: 'Settings' }
+    { to: '/teacher/dashboard/report', label: 'Report' }
   ];
   const [announcements, setAnnouncements] = useState([]);
+  const [messages, setMessages] = useState([]);
+  
   useEffect(() => {
-    const stored = loadFromStorage('announcements', []);
-    setAnnouncements(stored);
+    const storedAnnouncements = loadFromStorage('announcements', []);
+    const storedMessages = loadFromStorage('messages', []);
+    setAnnouncements(storedAnnouncements);
+    setMessages(storedMessages);
   }, []);
 
   return (
@@ -338,19 +408,53 @@ function TeacherDashboard() {
       <h1>Dashboard</h1>
       <p>Welcome! Manage your students, classes, share announcements, and coordinate with parents.</p>
 
-      <div className="announcements-list">
-        {announcements.length === 0 ? (
-          <div className="announcement-empty">No announcements yet. Create one from the Announcements tab.</div>
-        ) : announcements.map((a) => (
-          <div key={a.id} className="announcement-card">
-            <div className="announcement-header">
-              <div className="announcement-title">{a.title}</div>
-              <div className="announcement-meta">{a.className} • {new Date(a.createdAt).toLocaleString()}</div>
-            </div>
-            <div className="announcement-desc">{a.description}</div>
-            {a.extra ? <div className="announcement-extra">{a.extra}</div> : null}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
+        {/* Announcements Section */}
+        <div>
+          <h2 style={{ color: '#e5e7eb', marginBottom: '16px' }}>Recent Announcements</h2>
+          <div className="announcements-list">
+            {announcements.length === 0 ? (
+              <div className="announcement-empty">No announcements yet. Create one from the Announcements tab.</div>
+            ) : announcements.slice(0, 3).map((a) => (
+              <div key={a.id} className="announcement-card">
+                <div className="announcement-header">
+                  <div className="announcement-title">{a.title}</div>
+                  <div className="announcement-meta">{a.className} • {new Date(a.createdAt).toLocaleString()}</div>
+                </div>
+                <div className="announcement-desc">{a.description}</div>
+                {a.extra ? <div className="announcement-extra">{a.extra}</div> : null}
+              </div>
+            ))}
           </div>
-        ))}
+          {announcements.length > 3 && (
+            <Link to="/teacher/dashboard/announcements" className="cta-btn" style={{ marginTop: '12px', display: 'inline-block' }}>
+              View All Announcements
+            </Link>
+          )}
+        </div>
+
+        {/* Messages Section */}
+        <div>
+          <h2 style={{ color: '#e5e7eb', marginBottom: '16px' }}>Recent Messages</h2>
+          <div className="announcements-list">
+            {messages.length === 0 ? (
+              <div className="announcement-empty">No messages yet. Check the Messages tab to start conversations.</div>
+            ) : messages.slice(0, 3).map((m) => (
+              <div key={m.id} className="announcement-card">
+                <div className="announcement-header">
+                  <div className="announcement-title">Message from {m.fromStudent}</div>
+                  <div className="announcement-meta">{new Date(m.createdAt).toLocaleString()}</div>
+                </div>
+                <div className="announcement-desc">{m.text}</div>
+              </div>
+            ))}
+          </div>
+          {messages.length > 3 && (
+            <Link to="/teacher/dashboard/messages" className="cta-btn" style={{ marginTop: '12px', display: 'inline-block' }}>
+              View All Messages
+            </Link>
+          )}
+        </div>
       </div>
     </SidebarLayout>
   );
@@ -363,7 +467,7 @@ function TeacherStudents() {
     { to: '/teacher/dashboard/classes', label: 'Classes' },
     { to: '/teacher/dashboard/announcements', label: 'Announcements' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
-    { to: '/teacher/dashboard/settings', label: 'Settings' }
+    { to: '/teacher/dashboard/report', label: 'Report' }
   ];
   const [students, setStudents] = useState([
     { id: '1', name: 'Ava Johnson', rollNumber: 'PT-001', email: 'ava.johnson@example.com', className: 'Grade 4', details: { attendancePercent: '', examMarks: '', assignmentsSubmitted: '' } },
@@ -542,7 +646,7 @@ function TeacherClasses() {
     { to: '/teacher/dashboard/classes', label: 'Classes' },
     { to: '/teacher/dashboard/announcements', label: 'Announcements' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
-    { to: '/teacher/dashboard/settings', label: 'Settings' }
+    { to: '/teacher/dashboard/report', label: 'Report' }
   ];
 
   const [classes, setClasses] = useState(() => loadFromStorage('classes', [
@@ -723,7 +827,7 @@ function TeacherAnnouncements() {
     { to: '/teacher/dashboard/classes', label: 'Classes' },
     { to: '/teacher/dashboard/announcements', label: 'Announcements' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
-    { to: '/teacher/dashboard/settings', label: 'Settings' }
+    { to: '/teacher/dashboard/report', label: 'Report' }
   ];
 
   const [classes] = useState(() => loadFromStorage('classes', []));
@@ -818,7 +922,7 @@ function TeacherMessages() {
     { to: '/teacher/dashboard/classes', label: 'Classes' },
     { to: '/teacher/dashboard/announcements', label: 'Announcements' },
     { to: '/teacher/dashboard/messages', label: 'Messages' },
-    { to: '/teacher/dashboard/settings', label: 'Settings' }
+    { to: '/teacher/dashboard/report', label: 'Report' }
   ];
 
   const classes = loadFromStorage('classes', []);
@@ -840,12 +944,33 @@ function TeacherMessages() {
   function sendMessage(e) {
     e.preventDefault();
     if (!draft.trim()) return;
-    const msg = { id: Date.now(), from: 'me', text: draft.trim(), at: Date.now(), toStudentId: chatWith?.id };
-    setMessages((m) => [...m, msg]);
+    const msg = { 
+      id: Date.now(), 
+      from: 'me', 
+      text: draft.trim(), 
+      at: Date.now(), 
+      toStudentId: chatWith?.id,
+      fromStudent: chatWith?.name,
+      createdAt: Date.now()
+    };
+    const updatedMessages = [...messages, msg];
+    setMessages(updatedMessages);
+    saveToStorage('messages', updatedMessages);
     setDraft('');
     // Simulate reply
     setTimeout(() => {
-      setMessages((m) => [...m, { id: Date.now() + 1, from: 'them', text: 'Thanks for the update!', at: Date.now(), toStudentId: chatWith?.id }]);
+      const reply = { 
+        id: Date.now() + 1, 
+        from: 'them', 
+        text: 'Thanks for the update!', 
+        at: Date.now(), 
+        toStudentId: chatWith?.id,
+        fromStudent: chatWith?.name,
+        createdAt: Date.now()
+      };
+      const finalMessages = [...updatedMessages, reply];
+      setMessages(finalMessages);
+      saveToStorage('messages', finalMessages);
     }, 800);
   }
 
@@ -914,6 +1039,791 @@ function TeacherMessages() {
           </form>
         </div>
       ) : null}
+    </SidebarLayout>
+  );
+}
+
+function TeacherReport() {
+  const links = [
+    { to: '/teacher/dashboard', label: 'Dashboard' },
+    { to: '/teacher/dashboard/students', label: 'Students' },
+    { to: '/teacher/dashboard/classes', label: 'Classes' },
+    { to: '/teacher/dashboard/announcements', label: 'Announcements' },
+    { to: '/teacher/dashboard/messages', label: 'Messages' },
+    { to: '/teacher/dashboard/report', label: 'Report' }
+  ];
+
+  const [students] = useState([
+    { id: '1', name: 'Ava Johnson', rollNumber: 'PT-001', email: 'ava.johnson@example.com', className: 'Grade 4', details: { attendancePercent: '92', examMarks: 'Math:95, Eng:88', assignmentsSubmitted: '8' } },
+    { id: '2', name: 'Leo Patel', rollNumber: 'PT-002', email: 'leo.patel@example.com', className: 'Grade 4', details: { attendancePercent: '88', examMarks: 'Math:82, Eng:90', assignmentsSubmitted: '7' } },
+    { id: '3', name: 'Mia Chen', rollNumber: 'PT-003', email: 'mia.chen@example.com', className: 'Grade 5', details: { attendancePercent: '95', examMarks: 'Math:98, Eng:92', assignmentsSubmitted: '9' } }
+  ]);
+
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [generatedReport, setGeneratedReport] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  function generateReport(student) {
+    setIsGenerating(true);
+    setSelectedStudent(student);
+    
+    // Simulate AI report generation
+    setTimeout(() => {
+      const report = `**Academic Report for ${student.name}**
+
+**Student Information:**
+- Name: ${student.name}
+- Roll Number: ${student.rollNumber}
+- Class: ${student.className}
+- Email: ${student.email}
+
+**Academic Performance:**
+- Attendance: ${student.details.attendancePercent}%
+- Exam Marks: ${student.details.examMarks}
+- Assignments Submitted: ${student.details.assignmentsSubmitted}
+
+**Analysis:**
+${student.details.attendancePercent >= 90 ? 'Excellent attendance record. Student shows strong commitment to learning.' : student.details.attendancePercent >= 80 ? 'Good attendance with room for improvement.' : 'Attendance needs attention. Please encourage regular attendance.'}
+
+${parseInt(student.details.assignmentsSubmitted) >= 8 ? 'Outstanding assignment completion rate. Student demonstrates consistent effort.' : parseInt(student.details.assignmentsSubmitted) >= 6 ? 'Good assignment completion. Continue the good work.' : 'Assignment completion needs improvement. Please provide additional support.'}
+
+**Recommendations:**
+- Continue current study habits
+- Focus on areas with lower performance
+- Maintain regular communication with parents
+- Consider additional support if needed
+
+**Overall Grade: ${student.details.attendancePercent >= 90 && parseInt(student.details.assignmentsSubmitted) >= 8 ? 'A' : student.details.attendancePercent >= 80 && parseInt(student.details.assignmentsSubmitted) >= 6 ? 'B' : 'C'}**
+
+Generated on: ${new Date().toLocaleDateString()}`;
+      
+      setGeneratedReport(report);
+      setIsGenerating(false);
+    }, 2000);
+  }
+
+  return (
+    <SidebarLayout title="Teacher Dashboard" links={links}>
+      <h1>Student Reports</h1>
+      <p>Select a student to generate an AI-powered academic report based on their performance data.</p>
+
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Roll No</th>
+              <th>Class</th>
+              <th>Attendance</th>
+              <th>Assignments</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((s) => (
+              <tr key={s.id}>
+                <td>{s.name}</td>
+                <td>{s.rollNumber}</td>
+                <td>{s.className}</td>
+                <td>{s.details.attendancePercent}%</td>
+                <td>{s.details.assignmentsSubmitted}</td>
+                <td>
+                  <button 
+                    className="table-btn" 
+                    onClick={() => generateReport(s)}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating && selectedStudent?.id === s.id ? 'Generating...' : 'Generate Report'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {generatedReport && (
+        <div className="report-section" style={{ marginTop: '24px' }}>
+          <h2>Generated Report for {selectedStudent?.name}</h2>
+          <div className="report-content" style={{ 
+            background: '#1a1a1a', 
+            padding: '20px', 
+            borderRadius: '8px', 
+            border: '1px solid #333',
+            whiteSpace: 'pre-line',
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            lineHeight: '1.6'
+          }}>
+            {generatedReport}
+          </div>
+          <div style={{ marginTop: '16px' }}>
+            <button className="cta-btn primary" onClick={() => {
+              navigator.clipboard.writeText(generatedReport);
+              alert('Report copied to clipboard!');
+            }}>
+              Copy Report
+            </button>
+            <button className="cta-btn" onClick={() => {
+              setGeneratedReport('');
+              setSelectedStudent(null);
+            }} style={{ marginLeft: '8px' }}>
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+    </SidebarLayout>
+  );
+}
+
+function ParentMessages() {
+  const links = [
+    { to: '/parent/dashboard', label: 'Dashboard' },
+    { to: '/parent/dashboard/messages', label: 'Messages' },
+    { to: '/parent/dashboard/assignments', label: 'Assignments' },
+    { to: '/parent/dashboard/profile', label: 'Profile' },
+    { to: '/parent/dashboard/report', label: 'Report' }
+  ];
+
+  const [messages, setMessages] = useState([]);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+
+  useEffect(() => {
+    const storedMessages = loadFromStorage('messages', []);
+    // Filter messages that are from teachers (not from parents)
+    const teacherMessages = storedMessages.filter(m => m.from === 'me' || m.from === 'teacher');
+    setMessages(teacherMessages);
+  }, []);
+
+  function viewMessage(message) {
+    setSelectedMessage(message);
+  }
+
+  return (
+    <SidebarLayout title="Parent Dashboard" links={links}>
+      <h1>Messages from Teachers</h1>
+      <p>View messages and updates from your child's teachers.</p>
+
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>From</th>
+              <th>Student</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {messages.length === 0 ? (
+              <tr>
+                <td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8' }}>
+                  No messages from teachers yet.
+                </td>
+              </tr>
+            ) : messages.map((m) => (
+              <tr key={m.id}>
+                <td>Teacher</td>
+                <td>{m.fromStudent || 'N/A'}</td>
+                <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {m.text}
+                </td>
+                <td>{new Date(m.createdAt || m.at).toLocaleDateString()}</td>
+                <td>
+                  <button className="table-btn" onClick={() => viewMessage(m)}>
+                    View
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {selectedMessage && (
+        <div className="modal-overlay" onClick={() => setSelectedMessage(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Message from Teacher</h3>
+              <button className="modal-close" onClick={() => setSelectedMessage(null)}>Close</button>
+            </div>
+            <div className="form" style={{ padding: '20px' }}>
+              <div className="form-row">
+                <label>Student:</label>
+                <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                  {selectedMessage.fromStudent || 'N/A'}
+                </div>
+              </div>
+              <div className="form-row">
+                <label>Date:</label>
+                <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                  {new Date(selectedMessage.createdAt || selectedMessage.at).toLocaleString()}
+                </div>
+              </div>
+              <div className="form-row">
+                <label>Message:</label>
+                <div style={{ 
+                  color: '#e5e7eb', 
+                  marginTop: '4px', 
+                  padding: '12px', 
+                  background: '#1a1a1a', 
+                  borderRadius: '6px',
+                  border: '1px solid #333',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {selectedMessage.text}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </SidebarLayout>
+  );
+}
+
+function ParentAssignments() {
+  const links = [
+    { to: '/parent/dashboard', label: 'Dashboard' },
+    { to: '/parent/dashboard/messages', label: 'Messages' },
+    { to: '/parent/dashboard/assignments', label: 'Assignments' },
+    { to: '/parent/dashboard/profile', label: 'Profile' },
+    { to: '/parent/dashboard/report', label: 'Report' }
+  ];
+
+  const [assignments, setAssignments] = useState([]);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
+
+  useEffect(() => {
+    const storedAssignments = loadFromStorage('assignments', []);
+    setAssignments(storedAssignments);
+  }, []);
+
+  function viewAssignment(assignment) {
+    setSelectedAssignment(assignment);
+  }
+
+  return (
+    <SidebarLayout title="Parent Dashboard" links={links}>
+      <h1>Assignments from Teachers</h1>
+      <p>View assignments posted by your child's teachers.</p>
+
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Subject</th>
+              <th>Class</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assignments.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{ textAlign: 'center', color: '#94a3b8' }}>
+                  No assignments posted yet.
+                </td>
+              </tr>
+            ) : assignments.map((a) => (
+              <tr key={a.id}>
+                <td>{a.title}</td>
+                <td>{a.subject || 'N/A'}</td>
+                <td>{a.className}</td>
+                <td>{a.dueDate ? new Date(a.dueDate).toLocaleDateString() : 'N/A'}</td>
+                <td>
+                  <span style={{
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    background: a.status === 'completed' ? '#10b981' : a.status === 'submitted' ? '#3b82f6' : '#f59e0b',
+                    color: 'white'
+                  }}>
+                    {a.status || 'pending'}
+                  </span>
+                </td>
+                <td>
+                  <button className="table-btn" onClick={() => viewAssignment(a)}>
+                    View Details
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {selectedAssignment && (
+        <div className="modal-overlay" onClick={() => setSelectedAssignment(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Assignment Details</h3>
+              <button className="modal-close" onClick={() => setSelectedAssignment(null)}>Close</button>
+            </div>
+            <div className="form" style={{ padding: '20px' }}>
+              <div className="form-row">
+                <label>Title:</label>
+                <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                  {selectedAssignment.title}
+                </div>
+              </div>
+              <div className="form-row">
+                <label>Subject:</label>
+                <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                  {selectedAssignment.subject || 'N/A'}
+                </div>
+              </div>
+              <div className="form-row">
+                <label>Class:</label>
+                <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                  {selectedAssignment.className}
+                </div>
+              </div>
+              <div className="form-row">
+                <label>Due Date:</label>
+                <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                  {selectedAssignment.dueDate ? new Date(selectedAssignment.dueDate).toLocaleDateString() : 'N/A'}
+                </div>
+              </div>
+              <div className="form-row">
+                <label>Status:</label>
+                <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                  <span style={{
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    background: selectedAssignment.status === 'completed' ? '#10b981' : selectedAssignment.status === 'submitted' ? '#3b82f6' : '#f59e0b',
+                    color: 'white'
+                  }}>
+                    {selectedAssignment.status || 'pending'}
+                  </span>
+                </div>
+              </div>
+              <div className="form-row">
+                <label>Description:</label>
+                <div style={{ 
+                  color: '#e5e7eb', 
+                  marginTop: '4px', 
+                  padding: '12px', 
+                  background: '#1a1a1a', 
+                  borderRadius: '6px',
+                  border: '1px solid #333',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {selectedAssignment.description || 'No description provided.'}
+                </div>
+              </div>
+              {selectedAssignment.instructions && (
+                <div className="form-row">
+                  <label>Instructions:</label>
+                  <div style={{ 
+                    color: '#e5e7eb', 
+                    marginTop: '4px', 
+                    padding: '12px', 
+                    background: '#1a1a1a', 
+                    borderRadius: '6px',
+                    border: '1px solid #333',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {selectedAssignment.instructions}
+                  </div>
+                </div>
+              )}
+              {selectedAssignment.attachments && selectedAssignment.attachments.length > 0 && (
+                <div className="form-row">
+                  <label>Attachments:</label>
+                  <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                    {selectedAssignment.attachments.map((attachment, index) => (
+                      <div key={index} style={{ marginBottom: '4px' }}>
+                        <a href={attachment.url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
+                          {attachment.name}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </SidebarLayout>
+  );
+}
+
+function ParentProfile() {
+  const links = [
+    { to: '/parent/dashboard', label: 'Dashboard' },
+    { to: '/parent/dashboard/messages', label: 'Messages' },
+    { to: '/parent/dashboard/assignments', label: 'Assignments' },
+    { to: '/parent/dashboard/profile', label: 'Profile' },
+    { to: '/parent/dashboard/report', label: 'Report' }
+  ];
+
+  const [child, setChild] = useState(null);
+  const [assignments, setAssignments] = useState([]);
+
+  useEffect(() => {
+    // Simulate getting the parent's child (in real app, this would be based on parent authentication)
+    const storedStudents = loadFromStorage('students', [
+      { id: '1', name: 'Ava Johnson', rollNumber: 'PT-001', email: 'ava.johnson@example.com', className: 'Grade 4', details: { attendancePercent: '92', examMarks: 'Math:95, Eng:88', assignmentsSubmitted: '8' } },
+      { id: '2', name: 'Leo Patel', rollNumber: 'PT-002', email: 'leo.patel@example.com', className: 'Grade 4', details: { attendancePercent: '88', examMarks: 'Math:82, Eng:90', assignmentsSubmitted: '7' } },
+      { id: '3', name: 'Mia Chen', rollNumber: 'PT-003', email: 'mia.chen@example.com', className: 'Grade 5', details: { attendancePercent: '95', examMarks: 'Math:98, Eng:92', assignmentsSubmitted: '9' } }
+    ]);
+    
+    // Load assignments data
+    const storedAssignments = loadFromStorage('assignments', [
+      { id: 'a1', title: 'Math Homework Chapter 5', subject: 'Mathematics', className: 'Grade 4', dueDate: '2024-01-15', status: 'completed', description: 'Complete exercises 1-20', instructions: 'Show all work clearly' },
+      { id: 'a2', title: 'English Essay', subject: 'English', className: 'Grade 4', dueDate: '2024-01-20', status: 'submitted', description: 'Write a 500-word essay on your favorite book', instructions: 'Use proper grammar and structure' },
+      { id: 'a3', title: 'Science Project', subject: 'Science', className: 'Grade 5', dueDate: '2024-01-25', status: 'pending', description: 'Create a model of the solar system', instructions: 'Include all planets and label them' }
+    ]);
+    
+    // For demo purposes, show the first student as the parent's child
+    // In a real app, this would be determined by parent-child relationship in database
+    setChild(storedStudents[0]);
+    setAssignments(storedAssignments);
+  }, []);
+
+  // Get assignments for child's class
+  const childAssignments = child ? 
+    assignments.filter(a => a.className === child.className) : [];
+
+  return (
+    <SidebarLayout title="Parent Dashboard" links={links}>
+      <h1>Your Child's Profile</h1>
+      <p>View your child's attendance, marks, and assignment submissions.</p>
+
+      {!child ? (
+        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>
+          No child information available yet.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
+          {/* Child Information */}
+          <div>
+            <h2 style={{ color: '#e5e7eb', marginBottom: '16px' }}>Student Information</h2>
+            <div style={{ 
+              background: '#1a1a1a', 
+              padding: '20px', 
+              borderRadius: '8px', 
+              border: '1px solid #333'
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Name:</label>
+                  <div style={{ color: '#e5e7eb', marginTop: '4px', fontWeight: 'bold' }}>
+                    {child.name}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Roll Number:</label>
+                  <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                    {child.rollNumber}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Class:</label>
+                  <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                    {child.className}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Email:</label>
+                  <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                    {child.email}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Attendance:</label>
+                  <div style={{ marginTop: '4px' }}>
+                    <span style={{
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      background: child.details.attendancePercent >= 90 ? '#10b981' : child.details.attendancePercent >= 80 ? '#3b82f6' : '#f59e0b',
+                      color: 'white'
+                    }}>
+                      {child.details.attendancePercent}%
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Assignments Submitted:</label>
+                  <div style={{ marginTop: '4px' }}>
+                    <span style={{
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      background: parseInt(child.details.assignmentsSubmitted) >= 8 ? '#10b981' : parseInt(child.details.assignmentsSubmitted) >= 6 ? '#3b82f6' : '#f59e0b',
+                      color: 'white'
+                    }}>
+                      {child.details.assignmentsSubmitted}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Exam Marks:</label>
+                <div style={{ 
+                  color: '#e5e7eb', 
+                  marginTop: '4px', 
+                  padding: '12px', 
+                  background: '#0b0d12', 
+                  borderRadius: '6px',
+                  border: '1px solid #333',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {child.details.examMarks || 'No exam marks recorded yet.'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Class Assignments */}
+          <div>
+            <h2 style={{ color: '#e5e7eb', marginBottom: '16px' }}>Class Assignments</h2>
+            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {childAssignments.length === 0 ? (
+                <div style={{ 
+                  color: '#94a3b8', 
+                  padding: '20px', 
+                  background: '#1a1a1a', 
+                  borderRadius: '8px', 
+                  border: '1px solid #333',
+                  textAlign: 'center'
+                }}>
+                  No assignments posted for this class yet.
+                </div>
+              ) : (
+                childAssignments.map((assignment) => (
+                  <div key={assignment.id} style={{ 
+                    padding: '16px', 
+                    background: '#1a1a1a', 
+                    borderRadius: '8px', 
+                    border: '1px solid #333',
+                    marginBottom: '12px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <div style={{ color: '#e5e7eb', fontWeight: 'bold', fontSize: '16px' }}>
+                        {assignment.title}
+                      </div>
+                      <span style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        background: assignment.status === 'completed' ? '#10b981' : assignment.status === 'submitted' ? '#3b82f6' : '#f59e0b',
+                        color: 'white'
+                      }}>
+                        {assignment.status}
+                      </span>
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '8px' }}>
+                      {assignment.subject} • Due: {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'N/A'}
+                    </div>
+                    <div style={{ color: '#cbd5e1', fontSize: '14px' }}>
+                      {assignment.description}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </SidebarLayout>
+  );
+}
+
+function ParentReport() {
+  const links = [
+    { to: '/parent/dashboard', label: 'Dashboard' },
+    { to: '/parent/dashboard/messages', label: 'Messages' },
+    { to: '/parent/dashboard/assignments', label: 'Assignments' },
+    { to: '/parent/dashboard/profile', label: 'Profile' },
+    { to: '/parent/dashboard/report', label: 'Report' }
+  ];
+
+  const [child, setChild] = useState(null);
+  const [generatedReport, setGeneratedReport] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    // Simulate getting the parent's child (in real app, this would be based on parent authentication)
+    const storedStudents = loadFromStorage('students', [
+      { id: '1', name: 'Ava Johnson', rollNumber: 'PT-001', email: 'ava.johnson@example.com', className: 'Grade 4', details: { attendancePercent: '92', examMarks: 'Math:95, Eng:88', assignmentsSubmitted: '8' } },
+      { id: '2', name: 'Leo Patel', rollNumber: 'PT-002', email: 'leo.patel@example.com', className: 'Grade 4', details: { attendancePercent: '88', examMarks: 'Math:82, Eng:90', assignmentsSubmitted: '7' } },
+      { id: '3', name: 'Mia Chen', rollNumber: 'PT-003', email: 'mia.chen@example.com', className: 'Grade 5', details: { attendancePercent: '95', examMarks: 'Math:98, Eng:92', assignmentsSubmitted: '9' } }
+    ]);
+    
+    // For demo purposes, show the first student as the parent's child
+    setChild(storedStudents[0]);
+  }, []);
+
+  function generateReport() {
+    if (!child) return;
+    
+    setIsGenerating(true);
+    
+    // Simulate AI report generation
+    setTimeout(() => {
+      const report = `**Academic Report for ${child.name}**
+
+**Student Information:**
+- Name: ${child.name}
+- Roll Number: ${child.rollNumber}
+- Class: ${child.className}
+- Email: ${child.email}
+
+**Academic Performance:**
+- Attendance: ${child.details.attendancePercent}%
+- Exam Marks: ${child.details.examMarks}
+- Assignments Submitted: ${child.details.assignmentsSubmitted}
+
+**Analysis:**
+${child.details.attendancePercent >= 90 ? 'Excellent attendance record. Student shows strong commitment to learning.' : child.details.attendancePercent >= 80 ? 'Good attendance with room for improvement.' : 'Attendance needs attention. Please encourage regular attendance.'}
+
+${parseInt(child.details.assignmentsSubmitted) >= 8 ? 'Outstanding assignment completion rate. Student demonstrates consistent effort.' : parseInt(child.details.assignmentsSubmitted) >= 6 ? 'Good assignment completion. Continue the good work.' : 'Assignment completion needs improvement. Please provide additional support.'}
+
+**Recommendations for Parents:**
+- Continue supporting current study habits
+- Monitor areas with lower performance
+- Maintain regular communication with teachers
+- Encourage consistent attendance
+- Provide additional support if needed
+
+**Overall Grade: ${child.details.attendancePercent >= 90 && parseInt(child.details.assignmentsSubmitted) >= 8 ? 'A' : child.details.attendancePercent >= 80 && parseInt(child.details.assignmentsSubmitted) >= 6 ? 'B' : 'C'}**
+
+**Parent-Teacher Communication:**
+Regular communication between parents and teachers is essential for student success. Please feel free to reach out to teachers for any concerns or questions about your child's progress.
+
+Generated on: ${new Date().toLocaleDateString()}`;
+      
+      setGeneratedReport(report);
+      setIsGenerating(false);
+    }, 2000);
+  }
+
+  return (
+    <SidebarLayout title="Parent Dashboard" links={links}>
+      <h1>Your Child's Academic Report</h1>
+      <p>Generate a comprehensive academic report for your child based on their performance data.</p>
+
+      {!child ? (
+        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>
+          No child information available yet.
+        </div>
+      ) : (
+        <div>
+          <div style={{ 
+            background: '#1a1a1a', 
+            padding: '20px', 
+            borderRadius: '8px', 
+            border: '1px solid #333',
+            marginBottom: '24px'
+          }}>
+            <h2 style={{ color: '#e5e7eb', marginBottom: '16px' }}>Student Information</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Name:</label>
+                <div style={{ color: '#e5e7eb', marginTop: '4px', fontWeight: 'bold' }}>
+                  {child.name}
+                </div>
+              </div>
+              <div>
+                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Class:</label>
+                <div style={{ color: '#e5e7eb', marginTop: '4px' }}>
+                  {child.className}
+                </div>
+              </div>
+              <div>
+                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Attendance:</label>
+                <div style={{ marginTop: '4px' }}>
+                  <span style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    background: child.details.attendancePercent >= 90 ? '#10b981' : child.details.attendancePercent >= 80 ? '#3b82f6' : '#f59e0b',
+                    color: 'white'
+                  }}>
+                    {child.details.attendancePercent}%
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label style={{ color: '#cbd5e1', fontSize: '14px' }}>Assignments:</label>
+                <div style={{ marginTop: '4px' }}>
+                  <span style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    background: parseInt(child.details.assignmentsSubmitted) >= 8 ? '#10b981' : parseInt(child.details.assignmentsSubmitted) >= 6 ? '#3b82f6' : '#f59e0b',
+                    color: 'white'
+                  }}>
+                    {child.details.assignmentsSubmitted}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <button 
+              className="cta-btn primary" 
+              onClick={generateReport}
+              disabled={isGenerating}
+              style={{ fontSize: '16px', padding: '12px 24px' }}
+            >
+              {isGenerating ? 'Generating Report...' : 'Generate Academic Report'}
+            </button>
+          </div>
+
+          {generatedReport && (
+            <div className="report-section">
+              <h2 style={{ color: '#e5e7eb', marginBottom: '16px' }}>Generated Report for {child.name}</h2>
+              <div className="report-content" style={{ 
+                background: '#1a1a1a', 
+                padding: '20px', 
+                borderRadius: '8px', 
+                border: '1px solid #333',
+                whiteSpace: 'pre-line',
+                fontFamily: 'monospace',
+                fontSize: '14px',
+                lineHeight: '1.6'
+              }}>
+                {generatedReport}
+              </div>
+              <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                <button className="cta-btn primary" onClick={() => {
+                  navigator.clipboard.writeText(generatedReport);
+                  alert('Report copied to clipboard!');
+                }}>
+                  Copy Report
+                </button>
+                <button className="cta-btn" onClick={() => {
+                  setGeneratedReport('');
+                }} style={{ marginLeft: '8px' }}>
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </SidebarLayout>
   );
 }
