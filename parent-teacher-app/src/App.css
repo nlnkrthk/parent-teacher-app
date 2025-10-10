@@ -173,6 +173,58 @@
   margin: 8px 0 0 0;
 }
 
+/* Sidebar Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: #0b0d12;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 16px;
+}
+
+.sidebar h2 {
+  margin: 0 0 12px 0;
+  color: #e5e7eb;
+  font-size: 18px;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.nav-item a {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #cbd5e1;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.nav-item a:hover, .nav-item a.active {
+  background: #111318;
+  border-color: rgba(255,255,255,0.08);
+  color: #e5e7eb;
+}
+
+.content {
+  padding: 24px;
+  background: #0f1115;
+}
+
+.content h1 {
+  margin-top: 0;
+  color: #f3f4f6;
+}
+
 /* CRA defaults retained for future use */
 .App-logo {
   height: 40vmin;
@@ -207,4 +259,65 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Table styles */
+.table-wrap {
+  margin-top: 20px;
+  overflow: auto;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  background: rgba(17, 19, 24, 0.6);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+}
+
+.table thead th {
+  text-align: left;
+  padding: 12px 14px;
+  color: #cbd5e1;
+  background: rgba(255,255,255,0.04);
+}
+
+.table tbody td {
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.table tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.table-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #111318;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.table-btn:hover {
+  background: #151922;
+}
+
+/* Add-student form grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.form-error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
 }
