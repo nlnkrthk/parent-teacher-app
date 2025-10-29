@@ -37,7 +37,7 @@ jobs:
       # 🎨 Frontend
       - name: Install Frontend Dependencies
         run: |
-          cd parent-teacher-
+          cd parent-teacher-app
           npm install
 
       - name: Build Frontend
