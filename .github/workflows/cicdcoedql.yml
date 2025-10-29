@@ -40,7 +40,3 @@ jobs:
           cd parent-teacher-app
           npm install
 
-      - name: Build Frontend
-        run: |
-          cd parent-teacher-app
-          npm run build
