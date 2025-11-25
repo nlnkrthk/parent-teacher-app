@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const sql = require('mssql');
 const cors = require('cors');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const app = express();
 app.use(express.json());
@@ -249,6 +251,67 @@ app.get('/messages/:user1/:user2', async (req, res) => {
     res.send(result.recordset);
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+
+app.get('/summarize/student/:student_id', async (req, res) => {
+  const { student_id } = req.params;
+
+  try {
+    // 1️⃣ Fetch student basic details
+    const studentQuery = await sql.query`
+      SELECT id, name, email FROM Users WHERE id = ${student_id}
+    `;
+    const student = studentQuery.recordset[0];
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    // 2️⃣ Fetch attendance & marks
+    const detailsQuery = await sql.query(`
+      SELECT TOP 1 attendance, marks
+      FROM StudentDetails
+      WHERE student_id = ${student_id}
+      ORDER BY id DESC
+    `);
+
+    const details = detailsQuery.recordset[0] || { attendance: null, marks: null };
+
+    // 3️⃣ Prepare AI prompt
+    const prompt = `
+      Generate a short performance summary for this student:
+
+      Name: ${student.name}
+      Attendance: ${details.attendance || "Not available"}%
+      Marks: ${details.marks || "Not available"}
+
+      Create:
+      - Academic performance overview
+      - Attendance behaviour analysis
+      - Strengths and weaknesses
+      - Improvement suggestions
+      Keep the tone simple and clear.
+    `;
+
+    // 4️⃣ Call Gemini Model
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const aiResult = await model.generateContent(prompt);
+
+    const summary = aiResult.response.text();
+
+    // 5️⃣ Send back summary + data
+    res.json({
+      success: true,
+      student,
+      details,
+      ai_summary: summary
+    });
+
+  } catch (err) {
+    console.error("❌ Error generating summary:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

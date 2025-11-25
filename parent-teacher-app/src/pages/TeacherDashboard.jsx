@@ -26,6 +26,11 @@ export default function TeacherDashboard() {
   const [modalMarks, setModalMarks] = useState("");
   const [modalLoading, setModalLoading] = useState(false);
   const [modalExisting, setModalExisting] = useState(false);
+
+  // Student Report states
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportData, setReportData] = useState(null);
   
   const API = "http://localhost:4000";
 
@@ -96,6 +101,34 @@ export default function TeacherDashboard() {
       console.error(err);
       alert("Error adding details");
     }
+  }
+
+  // Generate AI report for a student
+  async function generateReport(studentId) {
+    setReportData(null);
+    setReportLoading(true);
+    setShowReportModal(true);
+    try {
+      const res = await fetch(`${API}/summarize/student/${studentId}`);
+      if (!res.ok) {
+        const txt = await res.text();
+        setReportData({ error: txt || "Failed to fetch report" });
+      } else {
+        const data = await res.json();
+        setReportData(data);
+      }
+    } catch (err) {
+      console.error("generateReport error:", err);
+      setReportData({ error: err.message });
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  function closeReportModal() {
+    setShowReportModal(false);
+    setReportData(null);
+    setReportLoading(false);
   }
   
   // load teacher subjects
@@ -257,6 +290,15 @@ export default function TeacherDashboard() {
               {tab}
             </li>
           ))}
+
+          <li
+            key="studentReport"
+            className={`cursor-pointer p-2 rounded ${activeTab === "studentReport" ? "bg-indigo-500" : "hover:bg-indigo-600"}`}
+            onClick={() => { setActiveTab("studentReport"); }}
+          >
+            Student Report
+          </li>
+
           <li
             onClick={logout}
             className="cursor-pointer mt-6 bg-red-600 hover:bg-red-700 p-2 rounded text-center"
@@ -268,6 +310,40 @@ export default function TeacherDashboard() {
 
       {/* ---------- Main Content ---------- */}
       <div className="flex-1 p-8 overflow-y-auto">
+        {activeTab === "studentReport" && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">Student Reports</h2>
+            <table className="w-full border">
+              <thead>
+                <tr className="bg-indigo-600 text-white">
+                  <th className="p-2 border">Name</th>
+                  <th className="p-2 border">Email</th>
+                  <th className="p-2 border">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.length === 0 && (
+                  <tr><td colSpan="3" className="p-2 text-sm text-gray-500">No students found</td></tr>
+                )}
+                {students.map((s) => (
+                  <tr key={s.id} className="border">
+                    <td className="p-2 border">{s.name}</td>
+                    <td className="p-2 border">{s.email}</td>
+                    <td className="p-2 border">
+                      <button
+                        className="bg-indigo-600 text-white px-3 py-1 rounded"
+                        onClick={() => generateReport(s.id)}
+                      >
+                        Generate Report
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         {activeTab === "subjects" && (
           <div>
             <h2 className="text-xl font-bold mb-4">Manage Subjects</h2>
@@ -525,6 +601,39 @@ export default function TeacherDashboard() {
                   </>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Report Modal */}
+        {showReportModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+            <div className="bg-white rounded p-6 w-11/12 md:w-3/4 max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-start">
+                <h3 className="text-lg font-semibold mb-3">AI Student Report</h3>
+                <button onClick={closeReportModal} className="text-sm text-gray-600">Close</button>
+              </div>
+              {reportLoading ? (
+                <div className="text-sm text-gray-500">Generating report...</div>
+              ) : reportData ? (
+                reportData.error ? (
+                  <div className="text-red-600">{reportData.error}</div>
+                ) : (
+                  <>
+                    <div className="mb-2">
+                      <strong>{reportData.student?.name}</strong> — {reportData.student?.email}
+                    </div>
+                    <div className="mb-2 text-sm text-gray-600">
+                      Attendance: {reportData.details?.attendance ?? "N/A"} • Marks: {reportData.details?.marks ?? "N/A"}
+                    </div>
+                    <div className="mt-4 p-4 bg-gray-50 border rounded whitespace-pre-line">
+                      {reportData.ai_summary || "No summary returned"}
+                    </div>
+                  </>
+                )
+              ) : (
+                <div className="text-sm text-gray-500">No report data</div>
+              )}
             </div>
           </div>
         )}
