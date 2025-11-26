@@ -15,7 +15,7 @@ export default function TeacherDashboard() {
   const [selectedTeacher, setSelectedTeacher] = useState("");
   const [newMessage, setNewMessage] = useState("");
 
-  const API = "http://localhost:4000";
+  const API = "https://ptabackend.azurewebsites.net";
 
   useEffect(() => {
     loadSubjects();

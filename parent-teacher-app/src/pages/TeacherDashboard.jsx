@@ -32,7 +32,7 @@ export default function TeacherDashboard() {
   const [reportLoading, setReportLoading] = useState(false);
   const [reportData, setReportData] = useState(null);
   
-  const API = "http://localhost:4000";
+  const API = "https://ptabackend.azurewebsites.net";
 
   // Load subjects + students + teacher announcements on mount
   useEffect(() => {

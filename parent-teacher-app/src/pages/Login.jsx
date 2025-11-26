@@ -14,7 +14,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = `http://localhost:4000/${isSignup ? "signup" : "login"}`;
+    const url = `https://ptabackend.azurewebsites.net/${isSignup ? "signup" : "login"}`;
     const body = isSignup ? { name, email, password, role } : { email, password };
 
     try {
