@@ -35,12 +35,11 @@ export default function TeacherDashboard() {
   const API = "https://ptabackend.azurewebsites.net";
 
   // Load subjects + students + teacher announcements on mount
-useEffect(() => {
-    loadStudents();
+  useEffect(() => {
     loadSubjects();
+    loadStudents();
     loadTeacherAnnouncements();
-}, [loadStudents, loadSubjects, loadTeacherAnnouncements]);
-
+  }, []);
 
   async function openDetailsModal(studentId) {
     setModalStudentId(studentId);

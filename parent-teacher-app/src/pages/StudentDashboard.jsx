@@ -16,12 +16,12 @@ export default function TeacherDashboard() {
 
   const API = "https://ptabackend.azurewebsites.net";
 
-useEffect(() => {
-    loadAnnouncements();
-    loadDetails();
+  useEffect(() => {
     loadSubjects();
+    loadDetails();
+    loadAnnouncements();
     loadTeachers();
-}, [loadAnnouncements, loadDetails, loadSubjects, loadTeachers]);
+  }, []);
 
   async function loadSubjects() {
     try {
