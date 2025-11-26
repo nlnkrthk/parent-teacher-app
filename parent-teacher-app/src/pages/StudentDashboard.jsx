@@ -3,7 +3,6 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 
 export default function TeacherDashboard() {
-  const navigate = useNavigate();
   const user = JSON.parse(Cookies.get("user"));
   const [activeTab, setActiveTab] = useState("subjects");
 
@@ -17,12 +16,12 @@ export default function TeacherDashboard() {
 
   const API = "https://ptabackend.azurewebsites.net";
 
-  useEffect(() => {
-    loadSubjects();
-    loadDetails();
+useEffect(() => {
     loadAnnouncements();
+    loadDetails();
+    loadSubjects();
     loadTeachers();
-  }, []);
+}, [loadAnnouncements, loadDetails, loadSubjects, loadTeachers]);
 
   async function loadSubjects() {
     try {
